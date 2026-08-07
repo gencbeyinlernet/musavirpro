@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  /* Apple system blue: #007AFF (light) / #0A84FF (dark) */
+  --color-accent: #0a84ff;
+  --color-accent-light: #007aff;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: #1c1c1e;
+    color: #f1f5f9;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent the grey flash / highlight box on tap in iOS Safari & Android Chrome */
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Safe-area aware spacing helpers for notch / home-indicator devices */
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Momentum scrolling on iOS */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom scrollbars for Geometric Balance UI */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

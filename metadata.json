@@ -1,0 +1,6 @@
+{
+  "name": "MüşavirPro - Muhasebeci & Mali Müşavir Asistanı",
+  "description": "Apple tarzı modern arayüz ile Gelen Tebligatlar, Mali Takvim, Nakit Akış, Müşteri Bakiyeleri, Otomatik Mail, Özelleştirilebilir Teklif Oluşturucu, Resmi Gazete Haber Akışı ve Sesli AI Muhasebe Asistanı.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

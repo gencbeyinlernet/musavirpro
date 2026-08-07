@@ -1,0 +1,90 @@
+-- MüşavirPro - Supabase şema kurulumu
+-- Bu dosyanın tamamını kopyalayıp Supabase projenizde
+-- "SQL Editor" bölümüne yapıştırıp RUN edin.
+--
+-- Yönetici hesabı ("novarge" / "123456") sabit olduğu için bu tabloya
+-- kaydedilmez, uygulama tarafında doğrudan kontrol edilir.
+-- Bu tablolar sadece üye (member) hesaplarını, aktivite kayıtlarını ve
+-- üye <-> yönetici mesajlaşmasını tutar.
+
+-- 1) Üyeler
+create table if not exists public.users (
+  id uuid primary key default gen_random_uuid(),
+  username text unique not null,
+  password_hash text not null,
+  password_salt text not null,
+  created_at timestamptz not null default now()
+);
+
+-- 2) Aktivite kayıtları (yönetici tüm üye işlemlerini burada görür)
+create table if not exists public.activity_log (
+  id uuid primary key default gen_random_uuid(),
+  username text not null,
+  role text not null check (role in ('admin', 'member')),
+  action text not null,
+  details text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists activity_log_created_idx
+  on public.activity_log (created_at desc);
+
+-- 3) Üye <-> Yönetici mesajlaşması
+create table if not exists public.messages (
+  id uuid primary key default gen_random_uuid(),
+  sender_username text not null,
+  sender_role text not null check (sender_role in ('admin', 'member')),
+  recipient_username text not null,
+  body text not null,
+  is_read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists messages_conversation_idx
+  on public.messages (recipient_username, sender_username, created_at);
+
+-- 4) Oturumlar (Vercel gibi sunucusuz ortamlarda bellek paylaşılmadığı için
+--    giriş token'ları da veritabanında tutulur)
+create table if not exists public.sessions (
+  token text primary key,
+  username text not null,
+  role text not null check (role in ('admin', 'member')),
+  created_at timestamptz not null default now()
+);
+
+-- Bu tablolara sadece kendi Express sunucumuz (anon key ile) erişecek ve
+-- yetkilendirmeyi kendisi yapacak; bu nedenle RLS'i kapalı tutuyoruz.
+-- (Yerel / test amaçlı kurulum için uygundur.)
+alter table public.users disable row level security;
+alter table public.activity_log disable row level security;
+alter table public.messages disable row level security;
+alter table public.sessions disable row level security;
+
+-- Bazı Supabase projelerinde "disable row level security" tek başına
+-- yeterli olmayabiliyor; anon/authenticated rollerine tablo yetkilerini de
+-- açıkça veriyoruz ki "new row violates row-level security policy" hatası
+-- alınmasın.
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.users to anon, authenticated;
+grant select, insert, update, delete on public.activity_log to anon, authenticated;
+grant select, insert, update, delete on public.messages to anon, authenticated;
+grant select, insert, update, delete on public.sessions to anon, authenticated;
+
+-- Ek güvence: RLS bir şekilde açık kalsa bile erişime izin veren policy'ler.
+-- (Bu proje sadece kendi Express sunucumuzdan, kendi yetkilendirmemizle
+-- kullanıldığı için "herkese açık" policy burada güvenlik sorunu değildir.)
+drop policy if exists "allow all - users" on public.users;
+create policy "allow all - users" on public.users
+  for all to anon, authenticated using (true) with check (true);
+
+drop policy if exists "allow all - activity_log" on public.activity_log;
+create policy "allow all - activity_log" on public.activity_log
+  for all to anon, authenticated using (true) with check (true);
+
+drop policy if exists "allow all - messages" on public.messages;
+create policy "allow all - messages" on public.messages
+  for all to anon, authenticated using (true) with check (true);
+
+drop policy if exists "allow all - sessions" on public.sessions;
+create policy "allow all - sessions" on public.sessions
+  for all to anon, authenticated using (true) with check (true);
